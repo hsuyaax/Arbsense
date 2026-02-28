@@ -1,0 +1,22 @@
+.git
+.gitignore
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Local data and secrets
+.env
+data/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

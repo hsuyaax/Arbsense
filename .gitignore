@@ -1,0 +1,20 @@
+﻿# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+
+# Runtime data
+data/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Frontend
+frontend/node_modules/
+frontend/.next/

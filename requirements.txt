@@ -1,0 +1,11 @@
+﻿web3
+eth-account
+python-dotenv
+openai
+anthropic
+numpy
+pandas
+requests
+py-solc-x
+fastapi
+uvicorn
