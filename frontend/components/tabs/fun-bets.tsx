@@ -146,6 +146,7 @@ export function FunBetsTab() {
   const [lastTxHash, setLastTxHash] = useState<string>("");
   const [betAmounts, setBetAmounts] = useState<Record<string, string>>({});
   const [customBet, setCustomBet] = useState({ title: "", optionA: "", optionB: "", category: "fun" as "fun" | "habit" });
+  const [createdFlash, setCreatedFlash] = useState(false);
 
   // ── Wallet connect ──────────────────────────────────────────
 
@@ -296,14 +297,17 @@ export function FunBetsTab() {
       deadline: "2026-03-07",
       status: "open",
     };
-    setBets((prev) => [newBet, ...prev]);
+    setBets((prev) => [...prev, newBet]);
     setCustomBet({ title: "", optionA: "", optionB: "", category: "fun" });
+    setCreatedFlash(true);
+    setTimeout(() => setCreatedFlash(false), 2500);
   };
 
   // ── Render ──────────────────────────────────────────────────
 
-  const habitBets = bets.filter((b) => b.category === "habit");
-  const funBets = bets.filter((b) => b.category === "fun");
+  const customBets = bets.filter((b) => b.id.startsWith("custom-"));
+  const habitBets = bets.filter((b) => b.category === "habit" && !b.id.startsWith("custom-"));
+  const funBets = bets.filter((b) => b.category === "fun" && !b.id.startsWith("custom-"));
 
   return (
     <div className="flex flex-col gap-6">
@@ -408,7 +412,35 @@ export function FunBetsTab() {
             + Create Bet
           </button>
         </div>
+        {createdFlash && (
+          <div className="mt-3 px-3 py-2 border border-green-500/30 bg-green-500/10 font-mono text-[12px] text-green-400 animate-fade-in-up">
+            Bet created successfully! Scroll down to see it.
+          </div>
+        )}
       </div>
+
+      {/* User's Custom Bets */}
+      {customBets.length > 0 && (
+        <div className="panel">
+          <div className="panel-header">
+            <span>Your Custom Bets</span>
+            <span>{customBets.length} created</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06]">
+            {customBets.map((bet) => (
+              <BetCard
+                key={bet.id}
+                bet={bet}
+                amount={betAmounts[bet.id] || "0.001"}
+                onAmountChange={(v) => setBetAmounts((prev) => ({ ...prev, [bet.id]: v }))}
+                onBet={(side) => placeBet(bet.id, side)}
+                pending={pendingTx === bet.id}
+                walletConnected={wallet.connected}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Habit Builder Bets */}
       <div className="panel">

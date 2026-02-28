@@ -37,8 +37,8 @@ export function AggregatorTab({ markets }: { markets: Market[] }) {
             <div className="text-right">Liquidity</div>
           </div>
 
-          {sorted.map((m) => (
-            <div className="data-row" key={`${m.platform}-${m.market_id}`}>
+          {sorted.map((m, i) => (
+            <div className="data-row" key={`${m.platform}-${m.market_id}-${i}`}>
               <div>
                 <p className="text-[15px] font-normal leading-snug">{m.title}</p>
                 <div className="flex items-center gap-2 mt-1.5">
