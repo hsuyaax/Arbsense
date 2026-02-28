@@ -53,7 +53,7 @@ export function AggregatorTab({ markets }: { markets: Market[] }) {
                 <span className="text-muted">¢{(noPrice(m) * 100).toFixed(1)}</span>
               </div>
               <div className="font-mono text-[13px] text-muted text-right">
-                ${totalLiquidity(m).toLocaleString()}
+                ${new Intl.NumberFormat("en-US").format(totalLiquidity(m))}
               </div>
             </div>
           ))}
