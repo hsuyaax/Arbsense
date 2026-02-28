@@ -1,13 +1,16 @@
-﻿"""Read-only FastAPI backend for ArbSense dashboard."""
+﻿"""FastAPI backend for ArbSense dashboard with live data + SSE streaming."""
 
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from api.schemas import (
     ChainInfoResponse,
@@ -260,6 +263,79 @@ def stats() -> StatsResponse:
         best_spread_pct=round(max(spreads), 4) if spreads else 0.0,
         avg_confidence=round(sum(confidences) / len(confidences), 4) if confidences else 0.0,
         avg_quality_score=round(sum(quality_scores) / len(quality_scores), 2) if quality_scores else 0.0,
+    )
+
+
+# ── SSE streaming + live refresh ──────────────────────────────────
+
+_last_refresh: float = 0.0
+_refresh_lock = asyncio.Lock()
+
+
+def _run_live_pipeline() -> dict[str, Any]:
+    """Run the ArbSense agent pipeline with live data from Polymarket + Kalshi."""
+    from src.agent import AgentConfig, ArbSenseAgent
+    from src.config import load_settings
+
+    config = AgentConfig(use_live_data=True, target_market_count=60)
+    agent = ArbSenseAgent(settings=load_settings(), config=config)
+    return agent.run_single_cycle()
+
+
+@app.post("/refresh")
+async def refresh(background_tasks: BackgroundTasks) -> dict[str, str]:
+    """Trigger a live data refresh from Polymarket + Kalshi.
+
+    Debounced to at most once per 30 seconds.
+    """
+    global _last_refresh
+    now = time.time()
+    if now - _last_refresh < 30:
+        return {"status": "debounced", "message": "Refresh already ran recently. Wait 30s."}
+
+    async with _refresh_lock:
+        _last_refresh = time.time()
+
+    background_tasks.add_task(_run_live_pipeline)
+    return {"status": "started", "message": "Live pipeline refresh started in background."}
+
+
+async def _sse_generator():
+    """Server-Sent Events generator that pushes fresh stats every 5s."""
+    while True:
+        try:
+            payload = _load_json(DATA_DIR / "markets.json", {"markets": []})
+            market_count = len(payload.get("markets", []))
+
+            opp_payload = _load_json(DATA_DIR / "opportunities.json", {"all_opportunities": []})
+            opps = opp_payload.get("all_opportunities", [])
+
+            spreads = []
+            for row in opps:
+                s = float(row.get("spread_pct", 0))
+                if s > 0:
+                    spreads.append(s)
+
+            stats_data = {
+                "markets_scanned": market_count,
+                "opportunities": len(opps),
+                "avg_spread": round(sum(spreads) / len(spreads), 4) if spreads else 0,
+                "timestamp": time.time(),
+            }
+            yield f"data: {json.dumps(stats_data)}\n\n"
+        except Exception:
+            yield f"data: {json.dumps({'error': 'read_failed'})}\n\n"
+
+        await asyncio.sleep(5)
+
+
+@app.get("/stream")
+async def stream():
+    """SSE endpoint — pushes live dashboard metrics to the frontend."""
+    return StreamingResponse(
+        _sse_generator(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 

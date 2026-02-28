@@ -1,31 +1,57 @@
+function formatTimestamp(ts: string): string {
+  try {
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return ts;
+    return d.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  } catch {
+    return ts;
+  }
+}
+
+const ACTION_MAP: Record<string, string> = {
+  scan: "SCAN",
+  match: "MATCH",
+  opportunity: "EXEC",
+  execute: "SEND",
+  system: "INIT",
+};
+
 export function AgentFeedTab({
-  logs
+  logs,
 }: {
   logs: Array<{ timestamp: string; type: string; message: string }>;
 }) {
-  const color: Record<string, string> = {
-    scan: "border-blue-400/40 text-blue-200",
-    match: "border-green-400/40 text-green-200",
-    opportunity: "border-yellow-400/40 text-yellow-200",
-    execute: "border-red-400/40 text-red-200",
-    system: "border-slate-500/40 text-slate-200"
-  };
-
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Agent Feed</h2>
-      <div className="max-h-[600px] space-y-2 overflow-auto pr-1">
-        {logs.length === 0 && <p className="text-slate-400">No logs available.</p>}
-        {logs.map((log, idx) => (
-          <div
-            key={`${log.timestamp}-${idx}`}
-            className={`rounded-lg border-l-4 bg-panel p-3 mono text-sm ${color[log.type] || color.system}`}
-          >
-            <p className="text-xs text-slate-400">{log.timestamp}</p>
-            <p>[{log.type}] {log.message}</p>
-          </div>
-        ))}
+    <div className="panel">
+      <div className="panel-header">
+        <span>Agent Execution Feed</span>
+        <span>{logs.length} events</span>
       </div>
+
+      {logs.length === 0 ? (
+        <p className="text-muted font-mono text-sm py-8 text-center">
+          No logs available. Run the agent pipeline first.
+        </p>
+      ) : (
+        <div className="font-mono text-[11px] leading-[1.8] text-muted" style={{ maxHeight: 600, overflow: "auto" }}>
+          {logs.map((log, idx) => (
+            <div className="flex gap-4 mb-2" key={`log-${idx}`}>
+              <span className="text-neutral-600 flex-shrink-0">
+                {formatTimestamp(log.timestamp)}
+              </span>
+              <span className="text-white flex-shrink-0 w-12">
+                {ACTION_MAP[log.type] || "SYS"}
+              </span>
+              <span>{log.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

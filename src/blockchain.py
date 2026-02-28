@@ -15,16 +15,17 @@ BSC_TESTNET_CHAIN_ID = 97
 OPBNB_TESTNET_CHAIN_ID = 5611
 
 
-def _require_web3() -> tuple[Any, Any]:
+def _require_web3() -> tuple[Any, Any, Any]:
     """Import web3 lazily so the codebase can run without web3 during bootstrap."""
     try:
         from web3 import Web3  # type: ignore
         from web3.middleware import SignAndSendRawMiddlewareBuilder  # type: ignore
+        from web3.middleware import ExtraDataToPOAMiddleware  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover
         raise RuntimeError(
             "web3 is not installed. Install requirements before blockchain operations."
         ) from exc
-    return Web3, SignAndSendRawMiddlewareBuilder
+    return Web3, SignAndSendRawMiddlewareBuilder, ExtraDataToPOAMiddleware
 
 
 @dataclass
@@ -50,10 +51,13 @@ class ArbSenseChainClient:
         self.abi = abi
 
         self.net_cfg = self._resolve_network(network, settings)
-        self.Web3, self.SignAndSendRawMiddlewareBuilder = _require_web3()
+        self.Web3, self.SignAndSendRawMiddlewareBuilder, self.ExtraDataToPOAMiddleware = _require_web3()
         self.w3 = self.Web3(self.Web3.HTTPProvider(self.net_cfg.rpc_url))
         if not self.w3.is_connected():
             raise RuntimeError(f"Unable to connect to {network} RPC: {self.net_cfg.rpc_url}")
+
+        # BSC/opBNB are POA chains - inject middleware to handle extraData field
+        self.w3.middleware_onion.inject(self.ExtraDataToPOAMiddleware, layer=0)
 
         self.chain_id = int(self.w3.eth.chain_id)
         if self.chain_id not in ALLOWED_CHAIN_IDS:

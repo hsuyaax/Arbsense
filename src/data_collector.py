@@ -426,17 +426,41 @@ def filter_by_min_liquidity(
 
 
 def maybe_collect_live_markets() -> list[dict[str, Any]]:
-    """Placeholder for live connectors; returns empty until adapters are implemented."""
-    return []
+    """Fetch live markets from Polymarket + Kalshi APIs."""
+    from src.connectors.polymarket import fetch_polymarket_markets
+    from src.connectors.kalshi import fetch_kalshi_markets
+
+    markets: list[dict[str, Any]] = []
+
+    try:
+        poly = fetch_polymarket_markets(limit=40)
+        markets.extend(poly)
+    except Exception:
+        pass
+
+    try:
+        kalshi = fetch_kalshi_markets(limit=40)
+        markets.extend(kalshi)
+    except Exception:
+        pass
+
+    return markets
 
 
 def collect_markets(
     settings: Settings, use_live: bool = False, target_count: int = 30
 ) -> list[dict[str, Any]]:
-    """Collect markets from live sources when available, otherwise use curated samples."""
-    markets = maybe_collect_live_markets() if use_live else []
-    if len(markets) < target_count:
-        markets = build_sample_markets()
+    """Collect markets from live sources + BNB Chain platforms.
+
+    When use_live=True, fetches from Polymarket + Kalshi and merges with
+    BNB Chain native platforms for comprehensive cross-platform coverage.
+    """
+    # Always include BNB Chain platforms (predict.fun, probable, etc.)
+    markets = build_sample_markets()
+
+    if use_live:
+        live = maybe_collect_live_markets()
+        markets = live + markets  # live markets first
 
     markets = filter_by_min_liquidity(markets, settings.min_liquidity_usd)
     markets = markets[: max(1, min(target_count, len(markets)))]

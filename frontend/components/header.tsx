@@ -1,41 +1,38 @@
-type Stats = {
-  markets_scanned: number;
-  platforms: number;
-  ai_matches: number;
-  opportunities: number;
-  time_value_spreads?: number;
-  average_spread_pct: number;
+type Props = {
+  stats: {
+    markets_scanned: number;
+    platforms: number;
+    ai_matches: number;
+    opportunities: number;
+    time_value_spreads?: number;
+    average_spread_pct: number;
+  };
 };
 
-export function Header({ stats }: { stats: Stats }) {
-  const cards = [
-    { label: "Markets Scanned", value: stats.markets_scanned },
-    { label: "Platforms", value: stats.platforms },
-    { label: "AI Matches", value: stats.ai_matches },
-    { label: "Safe Opportunities", value: stats.opportunities },
-    { label: "Time-Value Spreads", value: stats.time_value_spreads ?? 0 },
-    { label: "Avg Spread %", value: `${stats.average_spread_pct.toFixed(2)}%` }
-  ];
-
+export function Header({ stats }: Props) {
   return (
-    <div className="mb-6 rounded-2xl border border-line bg-hero-shader p-6 shadow-glow">
-      <h1 className="mb-2 bg-gradient-to-r from-cyan-300 to-violet-400 bg-clip-text text-3xl font-bold text-transparent">
-        ArbSense
-      </h1>
-      <p className="mb-5 text-sm text-slate-300">
-        Prediction Market Intelligence Layer for BNB Chain
-      </p>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
-        {cards.map((card) => (
-          <div
-            key={card.label}
-            className="rounded-xl border border-white/10 bg-white/5 p-3 backdrop-blur-xl"
-          >
-            <p className="text-xs uppercase tracking-wide text-slate-400">{card.label}</p>
-            <p className="mt-1 text-xl font-semibold text-white mono">{card.value}</p>
-          </div>
-        ))}
+    <section className="py-8 md:py-12 flex flex-col md:flex-row justify-between items-start gap-8 animate-fade-in-up">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-4xl md:text-[56px] font-light leading-[1.08] tracking-[-2px] max-w-[700px]">
+          Intelligence for{" "}
+          <span className="text-muted">Cross-Platform</span>{" "}
+          Prediction Markets
+        </h1>
+        <p className="font-mono text-[12px] text-neutral-500 max-w-[520px] leading-relaxed">
+          AI-powered arbitrage detection across {stats.platforms} platforms. Semantic matching.
+          Resolution risk analysis. On-chain proof.
+        </p>
       </div>
-    </div>
+
+      <div className="flex flex-col gap-3 shrink-0">
+        <div className="font-mono text-[11px] flex items-center gap-2 px-4 py-2 border border-border whitespace-nowrap hover:border-white/25 transition-colors duration-300">
+          <span className="w-1.5 h-1.5 bg-white rounded-full animate-blink" />
+          SYSTEM ACTIVE
+        </div>
+        <div className="font-mono text-[10px] text-neutral-600 text-right">
+          {stats.markets_scanned} markets / {stats.ai_matches} matches / {stats.opportunities} opps
+        </div>
+      </div>
+    </section>
   );
 }

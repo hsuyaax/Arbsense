@@ -1,75 +1,103 @@
 import type { MatchRow } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-
-function scoreClass(score: number) {
-  if (score < 30) return "text-green-300 border-green-400/30 bg-green-500/10";
-  if (score > 70) return "text-red-300 border-red-400/30 bg-red-500/10";
-  return "text-yellow-300 border-yellow-400/30 bg-yellow-500/10";
-}
-
-function verdictIcon(verdict?: string) {
-  if (verdict === "SAFE") return "SAFE";
-  if (verdict === "DANGER") return "DANGER";
-  return "CAUTION";
-}
-
-function verdictVariant(verdict?: string): "safe" | "caution" | "danger" {
-  if (verdict === "SAFE") return "safe";
-  if (verdict === "DANGER") return "danger";
-  return "caution";
-}
 
 export function ResolutionRisksTab({ matches }: { matches: MatchRow[] }) {
   const rows = matches.filter((m) => m.is_match);
+
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Resolution Risks</h2>
-      {rows.length === 0 && <p className="text-slate-400">No matched markets available.</p>}
-      {rows.map((row, idx) => {
-        const score = row.resolution_conflict_score ?? 50;
-        const dateGap = getDateGapDays(row.market_a.resolution_date, row.market_b.resolution_date);
-        return (
-          <Card key={`${row.market_a.market_id}-${row.market_b.market_id}-${idx}`}>
-            <p className="mb-3 font-semibold text-white">{row.event_summary || row.market_a.title}</p>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                <p className="text-sm font-medium text-slate-200">{row.market_a.platform}</p>
-                <p className="mt-1 text-sm text-slate-300">{row.market_a.description}</p>
-              </div>
-              <div className={`flex items-center justify-center rounded-full border px-4 text-lg font-bold mono ${scoreClass(score)}`}>
-                {score}
-              </div>
-              <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-                <p className="text-sm font-medium text-slate-200">{row.market_b.platform}</p>
-                <p className="mt-1 text-sm text-slate-300">{row.market_b.description}</p>
-              </div>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-px bg-white/[0.12] border border-white/[0.12]">
+      {/* Main risks table */}
+      <div className="panel lg:col-span-8">
+        <div className="panel-header">
+          <span>Resolution Risk Engine</span>
+          <span>{rows.length} matched pairs analyzed</span>
+        </div>
+
+        {rows.length === 0 ? (
+          <p className="text-muted font-mono text-sm py-8 text-center">
+            No matched markets available.
+          </p>
+        ) : (
+          <div>
+            <div className="data-row font-mono text-[10px] uppercase text-muted tracking-wide">
+              <div>Event</div>
+              <div>Platforms</div>
+              <div>Similarity</div>
+              <div className="text-right">Risk / Verdict</div>
             </div>
-            <p className="mt-2 text-xs text-slate-400">
-              Verdict: <Badge variant={verdictVariant(row.safety_badge)}>{verdictIcon(row.safety_badge)}</Badge>
-              {typeof dateGap === "number" && (
-                <>
-                  {" "} | Date gap: <span className="mono">{dateGap} days</span>
-                </>
-              )}
-            </p>
-            <div className="mt-3 rounded-lg border border-red-400/20 bg-red-500/10 p-3">
-              <p className="text-sm font-semibold text-red-300">AI Trap Warnings</p>
-              <p className="mt-1 text-sm text-slate-300">
-                {row.resolution_risks.join(" | ") || row.reasoning}
-              </p>
-            </div>
-          </Card>
-        );
-      })}
+
+            {rows.map((row, idx) => {
+              const score = row.resolution_conflict_score ?? 50;
+              return (
+                <div className="data-row" key={`risk-${idx}`}>
+                  <div className="text-[15px] font-normal leading-snug">
+                    {row.event_summary || row.market_a.title}
+                  </div>
+                  <div className="font-mono text-[13px] text-muted">
+                    {row.platform_a} vs {row.platform_b}
+                  </div>
+                  <div className="font-mono text-[13px] text-muted">
+                    {(row.embedding_similarity * 100).toFixed(0)}%
+                  </div>
+                  <div className="flex items-center justify-end gap-3">
+                    <span className="font-mono text-[13px] text-white">{score}/100</span>
+                    <span className="tag">{row.safety_badge}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Side: Detailed risk breakdown */}
+      <div className="panel lg:col-span-4">
+        <div className="panel-header">
+          <span>Trap Analysis</span>
+          <span>AI-Powered</span>
+        </div>
+
+        {rows.length > 0 ? (
+          <div className="flex flex-col gap-6">
+            {rows.slice(0, 3).map((row, idx) => (
+              <div key={`detail-${idx}`} className="flex flex-col gap-3 pb-6 border-b border-white/[0.06] last:border-none last:pb-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-white">{row.platform_a} × {row.platform_b}</p>
+                  <span className="tag">{row.safety_badge}</span>
+                </div>
+
+                <div>
+                  <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Criteria A</span>
+                  <p className="text-[12px] text-muted leading-relaxed mt-0.5">{row.resolution_criteria_a}</p>
+                </div>
+                <div>
+                  <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Criteria B</span>
+                  <p className="text-[12px] text-muted leading-relaxed mt-0.5">{row.resolution_criteria_b}</p>
+                </div>
+
+                {row.resolution_risks.length > 0 && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Risk Factors</span>
+                    {row.resolution_risks.map((risk, i) => (
+                      <p key={i} className="font-mono text-[11px] text-muted mt-1">— {risk}</p>
+                    ))}
+                  </div>
+                )}
+
+                {row.edge_cases.length > 0 && (
+                  <div>
+                    <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Edge Cases</span>
+                    {row.edge_cases.map((ec, i) => (
+                      <p key={i} className="font-mono text-[11px] text-muted mt-1">— {ec}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted font-mono text-sm">Awaiting data...</p>
+        )}
+      </div>
     </div>
   );
-}
-
-function getDateGapDays(dateA?: string, dateB?: string): number | null {
-  if (!dateA || !dateB) return null;
-  const a = new Date(dateA);
-  const b = new Date(dateB);
-  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return null;
-  return Math.abs(Math.round((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24)));
 }

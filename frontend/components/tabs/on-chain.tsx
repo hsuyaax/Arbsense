@@ -19,45 +19,149 @@ type ChainInfo = {
 };
 
 export function OnChainTab({ chainInfo }: { chainInfo: ChainInfo }) {
-  const bscUrl = chainInfo.bsc.explorer_url;
-  const opbnbUrl = chainInfo.opbnb.explorer_url;
-
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">On-Chain</h2>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-xl border border-line bg-panel p-4">
-          <p className="text-sm text-slate-400">BSC Contract</p>
-          {bscUrl ? (
-            <a className="mono text-cyan-300 underline" href={bscUrl} target="_blank" rel="noreferrer">
-              {chainInfo.bsc.contract_address}
-            </a>
-          ) : (
-            <p className="text-slate-500">Not configured</p>
-          )}
-          <p className="mt-2 text-xs text-slate-400">
-            {chainInfo.bsc.network} | Verified: {chainInfo.bsc.verified ? "Yes" : "No"} | Reports: {chainInfo.bsc.opportunity_count}
-          </p>
+    <div className="flex flex-col gap-6">
+      {/* Chain cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.12] border border-white/[0.12]">
+        {/* BSC Card */}
+        <div className="panel">
+          <div className="panel-header">
+            <span>BSC Testnet</span>
+            <span>Chain ID: 97</span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div>
+              <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Contract Address</span>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="font-mono text-[13px] text-white truncate flex-1">
+                  {chainInfo.bsc.contract_address || "Not deployed"}
+                </p>
+                {chainInfo.bsc.explorer_url && (
+                  <a
+                    href={chainInfo.bsc.explorer_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tag hover:border-white/40 transition-colors"
+                  >
+                    Explorer →
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-8">
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">On-Chain Reports</span>
+                <p className="font-mono text-2xl mt-1">{chainInfo.bsc.opportunity_count}</p>
+              </div>
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Status</span>
+                <p className="mt-1"><span className="tag">{chainInfo.bsc.contract_address ? "Deployed" : "Pending"}</span></p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="rounded-xl border border-line bg-panel p-4">
-          <p className="text-sm text-slate-400">opBNB Contract</p>
-          {opbnbUrl ? (
-            <a className="mono text-cyan-300 underline" href={opbnbUrl} target="_blank" rel="noreferrer">
-              {chainInfo.opbnb.contract_address}
-            </a>
-          ) : (
-            <p className="text-slate-500">Not configured</p>
-          )}
-          <p className="mt-2 text-xs text-slate-400">
-            {chainInfo.opbnb.network} | Verified: {chainInfo.opbnb.verified ? "Yes" : "No"} | Reports: {chainInfo.opbnb.opportunity_count}
-          </p>
+
+        {/* opBNB Card */}
+        <div className="panel">
+          <div className="panel-header">
+            <span>opBNB Testnet</span>
+            <span>Chain ID: 5611</span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div>
+              <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Contract Address</span>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="font-mono text-[13px] text-muted truncate flex-1">
+                  {chainInfo.opbnb.contract_address || "Not deployed"}
+                </p>
+                {chainInfo.opbnb.explorer_url && (
+                  <a
+                    href={chainInfo.opbnb.explorer_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tag hover:border-white/40 transition-colors"
+                  >
+                    Explorer →
+                  </a>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-8">
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">On-Chain Reports</span>
+                <p className="font-mono text-2xl mt-1">{chainInfo.opbnb.opportunity_count}</p>
+              </div>
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Status</span>
+                <p className="mt-1"><span className="tag">{chainInfo.opbnb.contract_address ? "Deployed" : "Pending"}</span></p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div className="rounded-xl border border-line bg-panel p-4">
-        <p className="text-sm text-slate-400">Wallet Address</p>
-        <p className="mono text-slate-200">{chainInfo.wallet_address || "Not configured"}</p>
-        <p className="mt-2 text-sm text-slate-300">BSC Balance: {chainInfo.wallet_balance_bsc}</p>
-        <p className="text-sm text-slate-300">opBNB Balance: {chainInfo.wallet_balance_opbnb}</p>
+
+      {/* Wallet + Architecture */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.12] border border-white/[0.12]">
+        <div className="panel">
+          <div className="panel-header">
+            <span>Agent Wallet</span>
+            <span>Signing & Gas</span>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div>
+              <span className="font-mono text-[9px] uppercase text-muted tracking-wider">Address</span>
+              <p className="font-mono text-[13px] text-white mt-1">
+                {chainInfo.wallet_address || "Not configured"}
+              </p>
+            </div>
+
+            <div className="flex gap-8">
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">BSC Balance</span>
+                <p className="font-mono text-lg mt-1">{chainInfo.wallet_balance_bsc}</p>
+              </div>
+              <div>
+                <span className="font-mono text-[9px] uppercase text-muted tracking-wider">opBNB Balance</span>
+                <p className="font-mono text-lg mt-1">{chainInfo.wallet_balance_opbnb}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <span>Architecture</span>
+            <span>How it works</span>
+          </div>
+
+          <div className="font-mono text-[11px] leading-[1.8] text-muted">
+            <div className="flex gap-4 mb-2">
+              <span className="text-white">01</span>
+              <span>Agent selects top-1 opportunity per cycle</span>
+            </div>
+            <div className="flex gap-4 mb-2">
+              <span className="text-white">02</span>
+              <span>Calls reportOpportunity() on ArbSenseRegistry</span>
+            </div>
+            <div className="flex gap-4 mb-2">
+              <span className="text-white">03</span>
+              <span>Stores market pair, spread (bps), confidence (bps)</span>
+            </div>
+            <div className="flex gap-4 mb-2">
+              <span className="text-white">04</span>
+              <span>Emits OpportunityReported event for indexing</span>
+            </div>
+            <div className="flex gap-4">
+              <span className="text-white">05</span>
+              <span>Immutable on-chain proof of every discovery</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

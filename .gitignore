@@ -5,9 +5,13 @@ __pycache__/
 
 # Secrets
 .env
+.env.local
+.env*.local
+frontend/.env.local
 
 # Runtime data
-data/
+data/*.json
+data/*.csv
 
 # IDE / OS
 .vscode/
